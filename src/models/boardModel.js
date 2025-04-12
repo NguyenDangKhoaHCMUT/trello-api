@@ -1,4 +1,4 @@
-import Joi, { string } from 'joi'
+import Joi from 'joi'
 import { ObjectId } from 'mongodb'
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
 import { GET_DB } from '~/config/mongodb'
@@ -46,9 +46,21 @@ const findOneById = async (id) => {
   } catch (error) { throw new Error(error) }
 }
 
+// Query tổng hợp (aggregate) để lấy toàn bộ Columns và Cards của Board
+const getDetails = async (id) => {
+  try {
+    // Hôm nay tạm thời giống hệt như findOneById thôi, và sẽ update phần aggregate sau
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOne({
+      _id: new ObjectId(id)
+    })
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
 export const boardModel = {
   BOARD_COLLECTION_NAME,
   BOARD_COLLECTION_SCHEMA,
   createNew,
-  findOneById
+  findOneById,
+  getDetails
 }
