@@ -29,7 +29,7 @@ For detailed setup instructions, watch the project structure video tutorial: [No
 - @babel/preset-env: ^7.22.10
 - babel-plugin-module-resolver: ^5.0.0
 
-### Special Thanks
+## Special Thanks
 Special thanks to **Trungquandev** for his excellent tutorials and guidance throughout this learning journey. His clear explanations and practical examples have been invaluable in understanding the MERN stack development process.
 - **Blog**: [trungquandev.com](https://trungquandev.com/)
 - **YouTube Channels**:
