@@ -27,7 +27,7 @@ const START_SERVER = () => {
     // Môi trường production (cụ thể hiện tại là đang support trên Render.com)
     app.listen(process.env.PORT, () => {
       // eslint-disable-next-line no-console
-      console.log(`3. Production: Hello ${env.AUTHOR}, BE server is running successfully at port: ${ env.PORT }/`)
+      console.log(`3. Production: Hello ${env.AUTHOR}, BE server is running successfully at port: ${ process.env.PORT }/`)
     })
   }
   else {
