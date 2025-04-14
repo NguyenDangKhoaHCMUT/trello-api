@@ -23,10 +23,21 @@ const START_SERVER = () => {
   // Middleware xử lý lỗi tập trung
   app.use(errorHandlingMiddleware)
 
-  app.listen(env.APP_PORT, env.APP_HOST, () => {
-    // eslint-disable-next-line no-console
-    console.log(`3. Hello ${env.AUTHOR}, BE server is running successfully at hostname: ${ env.APP_HOST } and port: ${ env.APP_PORT }/`)
-  })
+  if (env.BUILD_MODE === 'production') {
+    // Môi trường production (cụ thể hiện tại là đang support trên Render.com)
+    app.listen(process.env.PORT, () => {
+      // eslint-disable-next-line no-console
+      console.log(`3. Production: Hello ${env.AUTHOR}, BE server is running successfully at port: ${ env.PORT }/`)
+    })
+  }
+  else {
+    // Môi trường local dev
+    app.listen(env.LOCAL_DEV_APP_PORT, env.LOCAL_DEV_APP_HOST, () => {
+      // eslint-disable-next-line no-console
+      console.log(`3. Local dev: Hello ${env.AUTHOR}, BE server is running successfully at hostname: ${ env.LOCAL_DEV_APP_HOST } and port: ${ env.LOCAL_DEV_APP_PORT }/`)
+    })
+  }
+
 
   // Khi server BE tắt thì sẽ gọi hàm này
   // HIỆN VẪN CHƯA DÙNG ĐƯỢC
