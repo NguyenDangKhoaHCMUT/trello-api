@@ -1,5 +1,8 @@
 import { columnModel } from '~/models/columnModel'
 import { boardModel } from '~/models/boardModel'
+import { cardModel } from '~/models/cardModel'
+import ApiError from '~/utils/ApiError'
+import { StatusCodes } from 'http-status-codes'
 
 const createNew = async (reqBody) => {
   try {
@@ -26,6 +29,41 @@ const createNew = async (reqBody) => {
   } catch (error) { throw error }
 }
 
+const update = async (columnId, reqBody) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const updateData = {
+      ...reqBody,
+      updatedAt: Date.now()
+    }
+    // Gọi tới Model để lưu dữ liệu bản ghi newBoard vào Database
+    const updatedColumn = await columnModel.update(columnId, updateData)
+
+    // Trả về dữ liệu cho Controller, luôn dữ liệu về cho Controller
+    return updatedColumn
+  } catch (error) { throw error }
+}
+
+const deleteItem = async (columnId) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const targetColumn = await columnModel.findOneById(columnId)
+    if (!targetColumn) throw new ApiError(StatusCodes.NOT_FOUND, 'Column not found!')
+    // Xoá Column
+    await columnModel.deleteOneById(columnId)
+
+    // Xóa Card trong Column
+    await cardModel.deleteManyByColumnId(columnId)
+
+    // Xoá ColumnId trong mảng columnOrderIds của Board
+    await boardModel.pullColumnOrderIds(targetColumn)
+
+    return { deleteResult: 'Columns and its Cards deleted successfully!' }
+  } catch (error) { throw error }
+}
+
 export const columnService = {
-  createNew
+  createNew,
+  update,
+  deleteItem
 }

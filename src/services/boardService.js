@@ -1,5 +1,7 @@
 import { slugify } from '~/utils/formater'
 import { boardModel } from '~/models/boardModel'
+import { columnModel } from '~/models/columnModel'
+import { cardModel } from '~/models/cardModel'
 import ApiError from '~/utils/ApiError'
 import { StatusCodes } from 'http-status-codes'
 import { cloneDeep } from 'lodash'
@@ -59,7 +61,58 @@ const getDetails = async (boardId) => {
   } catch (error) { throw error }
 }
 
+const update = async (boardId, reqBody) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const updateData = {
+      ...reqBody,
+      updatedAt: Date.now()
+    }
+    // Gọi tới Model để lưu dữ liệu bản ghi newBoard vào Database
+    const updatedBoard = await boardModel.update(boardId, updateData)
+
+    // Trả về dữ liệu cho Controller, luôn dữ liệu về cho Controller
+    return updatedBoard
+  } catch (error) { throw error }
+}
+
+
+/**
+   * Khi di chuyển Card sang Column khác:
+   * B1: Cập nhật lại mảng cardOrderIds của Columnn ban đầu chứa nó (hiểu bản chất là xóa
+   * cái _id của Card trong mảng cardOrderIds của Column ban đầu)
+   *
+   * B2: Cập nhật lại mảng cardOrderIds của Columnn mới chứa nó (hiểu bản chất là thêm
+   * cái _id của Card vào mảng cardOrderIds của Column mới)
+   *
+   * B3: Cập nhật lại trường columnId mới của cái Card đã kéo
+   *
+   * => Làm một API support riêng
+   */
+const moveCardToDifferentColumn = async (reqBody) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    await columnModel.update(reqBody.prevColumnId, {
+      cardOrderIds: reqBody.prevCardOrderIds,
+      updatedAt: Date.now()
+    })
+
+    await columnModel.update(reqBody.nextColumnId, {
+      cardOrderIds: reqBody.nextCardOrderIds,
+      updatedAt: Date.now()
+    })
+
+    await cardModel.update(reqBody.currentCardId, {
+      columnId: reqBody.nextColumnId,
+      updatedAt: Date.now()
+    })
+    return { updateResult: 'Successfully!' }
+  } catch (error) { throw error }
+}
+
 export const boardService = {
   createNew,
-  getDetails
+  getDetails,
+  update,
+  moveCardToDifferentColumn
 }

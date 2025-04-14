@@ -57,7 +57,43 @@ const pushCardOrderIds = async (card) => {
       { $push: { cardOrderIds: new ObjectId(card._id) } },
       { returnDocument: 'after' }
     )
-    return result.value
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
+// Danh sách các field không được phép update trong hàm update
+const INVALID_UPDATE_FIELD = ['_id', 'boardId', 'createdAt']
+
+const update = async (columnId, updateData) => {
+  try {
+    // Validate dữ liệu đầu vào
+    Object.keys(updateData).forEach((fieldName) => {
+      if (INVALID_UPDATE_FIELD.includes(fieldName)) {
+        delete updateData[fieldName] // Xóa các field không được phép update
+      }
+    })
+    // Đối với những dữ liệu liên quan đến ObjectID, biến đổi ở đây
+    // (tùy sau này cần mà tách ra func riêng hay không)
+    if (updateData.cardOrderIds) {
+      updateData.cardOrderIds = updateData.cardOrderIds.map((_id) => new ObjectId(_id))
+    }
+    const result = await GET_DB().collection(COLUMN_COLLECTION_NAME).findOneAndUpdate(
+      { _id: new ObjectId(columnId) },
+      { $set: updateData },
+      { returnDocument: 'after' } // Sẽ trả về kết quả mới sau khi cập nhật
+    )
+    return result
+  } catch (error) { throw new Error(error) }
+}
+
+
+const deleteOneById = async (columnId) => {
+  try {
+    const result = await GET_DB().collection(COLUMN_COLLECTION_NAME).deleteOne({
+      _id: new ObjectId(columnId)
+    })
+    // console.log("🚀 ~ deleteOneById ~ result:", result)
+    return result
   } catch (error) { throw new Error(error) }
 }
 
@@ -66,5 +102,7 @@ export const columnModel = {
   COLUMN_COLLECTION_SCHEMA,
   createNew,
   findOneById,
-  pushCardOrderIds
+  pushCardOrderIds,
+  update,
+  deleteOneById
 }
