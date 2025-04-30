@@ -3,6 +3,8 @@ import { StatusCodes } from 'http-status-codes'
 import { boardValidation } from '~/validations/boardValidation'
 import { boardController } from '~/controllers/boardController'
 
+import { AuthMiddleware } from '~/middlewares/AuthMiddleware'
+
 const Router = express.Router()
 
 Router.route('/')
@@ -12,15 +14,15 @@ Router.route('/')
       status: StatusCodes.OK
     })
   })
-  .post(boardValidation.createNew, boardController.createNew)
+  .post(AuthMiddleware.isAuthorize, boardValidation.createNew, boardController.createNew)
 
 Router.route('/:id')
-  .get(boardController.getDetails)
-  .put(boardValidation.update, boardController.update)
+  .get(AuthMiddleware.isAuthorize, boardController.getDetails)
+  .put(AuthMiddleware.isAuthorize, boardValidation.update, boardController.update)
 
 // API hỗ trợ di chuyển Card giữa các Column trong cùng một Board
 Router.route('/supports/moving_cards')
-  .put(boardValidation.moveCardToDifferentColumn, boardController.moveCardToDifferentColumn)
+  .put(AuthMiddleware.isAuthorize, boardValidation.moveCardToDifferentColumn, boardController.moveCardToDifferentColumn)
 
 
 export const boardRoute = Router
