@@ -4,6 +4,7 @@ import { env } from '~/config/environment'
 export const WHITELIST_DOMAINS = [
   // 'http://localhost:5173'
   // Không cần localhost nữa vì ở file cors.js đã luôn luôn cho phép môi trường dev
+
   'https://trello-web-omega-weld.vercel.app'
 ]
 

@@ -24,7 +24,7 @@ const START_SERVER = () => {
 
   // Xử lý CORS
   // Nếu không có dòng app.use(cors(corsOptions)) thì web k gọi API đc nhưng vẫn có thể gọi API bằng Postman
-  app.use(cors(corsOptions))
+  // app.use(cors(corsOptions))
 
   app.use(express.json()) // Middleware để parse JSON body từ client gửi lên
 
