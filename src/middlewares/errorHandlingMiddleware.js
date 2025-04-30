@@ -1,10 +1,3 @@
-/**
- * Updated by trungquandev.com's author on Sep 27 2023
- * YouTube: https://youtube.com/@trungquandev
- * "A bit of fragrance clings to the hand that gives flowers!"
- * NOTE: (Muốn hiểu rõ hơn về code trong file này thì vui lòng xem video 54 trong bộ MERN Stack trên kênh Youtube của mình.)
-*/
-
 /* eslint-disable no-unused-vars */
 import { StatusCodes } from 'http-status-codes'
 import { env } from '~/config/environment'
@@ -13,7 +6,7 @@ import { env } from '~/config/environment'
 export const errorHandlingMiddleware = (err, req, res, next) => {
 
   // Nếu dev không cẩn thận thiếu statusCode thì mặc định sẽ để code 500 INTERNAL_SERVER_ERROR
-  if (!err.statusCode) err.statusCode = StatusCodes.INTERNAL_SERVER_ERROR
+  // if (!err.statusCode) err.statusCode = StatusCodes.INTERNAL_SERVER_ERROR
 
   // Tạo ra một biến responseError để kiểm soát những gì muốn trả về
   const responseError = {
