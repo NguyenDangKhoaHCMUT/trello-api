@@ -13,6 +13,7 @@ import { WEBSITE_DOMAIN } from '~/utils/constants'
 
 import { env } from '~/config/environment'
 import { JwtProvider } from '~/providers/JwtProvider'
+import { CloudinaryProvider } from '~/providers/CloudinaryProvider'
 
 const createNew = async (reqBody) => {
   try {
@@ -169,9 +170,60 @@ const refreshToken = async (clientRefreshToken) => {
   }
 }
 
+const update = async (userId, reqBody, userAvatarFile) => {
+  try {
+    // Query user và kiểm tra cho chắc chắn
+    const existUser = await userModel.findOneById(userId)
+    if (!existUser) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Account not found!')
+    }
+    if (!existUser.isActive) {
+      throw new ApiError(
+        StatusCodes.NOT_ACCEPTABLE,
+        'Account has not been activated! Check the email and verify before login!'
+      )
+    }
+
+    // Khởi tạo kết quả updated user ban đầu là empty
+    let updatedUser = {}
+
+    // TH change password
+    if (reqBody.current_password && reqBody.new_password) {
+      // Kiểm tra xem cái current_password có đúng hay không
+      if (!bcryptjs.compareSync(reqBody.current_password, existUser.password)) {
+        throw new ApiError(
+          StatusCodes.NOT_ACCEPTABLE,
+          'Your Current Password is incorrect!'
+        )
+      }
+      // Nếu như current_password đúng thì hash lại 1 cái mk mới và update lại vào DB
+      updatedUser = await userModel.update(userId, {
+        password: bcryptjs.hashSync(reqBody.current_password, 8) // Tham số thứ 2 giá trị càng cao thì băm mk càng lâu
+      })
+    } else if (userAvatarFile) {
+      // Trường hợp update file lên Cloud Storage, cụ thể là Cloudinary...
+      const uploadResult = await CloudinaryProvider.streamUpload(userAvatarFile.buffer, `users/${userId}`)
+
+      // Lưu lại URL của cái file ảnh đã được up lên Cloudinary vào database
+      updatedUser = await userModel.update(userId, {
+        avatar: uploadResult.secure_url
+      })
+    } else {
+      // Trường hợp update các thông tin chung, ví dụ như displayName
+      updatedUser = await userModel.update(userId, reqBody)
+    }
+
+    return pickUser(updatedUser)
+  }
+  catch (error) {
+    throw error
+  }
+}
+
 export const userService = {
   createNew,
   verifyAccount,
   login,
-  refreshToken
+  refreshToken,
+  update
 }
