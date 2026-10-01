@@ -20,12 +20,6 @@ export const corsOptions = {
     // Ngược lại thì hiện tại code chúng ta đang làm còn 1 TH là:
     // env.BUILD_MODE === 'production'
 
-    // Cho phép các request không có Origin (server-to-server, cron job ping, Postman, curl...)
-    // Đây là trường hợp bình thường khi request không xuất phát từ browser
-    if (!origin) {
-      return callback(null, true)
-    }
-
     // Kiểm tra xem origin có phải là domain được chấp nhận hay không
     if (WHITELIST_DOMAINS.includes(origin)) {
       return callback(null, true)
