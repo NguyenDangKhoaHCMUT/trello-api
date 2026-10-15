@@ -20,6 +20,16 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
     Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
   ).default([]),
 
+  // id của người sở hữu
+  ownerIds: Joi.array().items(
+    Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
+  ).default([]),
+
+  // id của thành viên
+  memberIds: Joi.array().items(
+    Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
+  ).default([]),
+
   createdAt: Joi.date().timestamp('javascript').default(Date.now),
   updatedAt: Joi.date().timestamp('javascript').default(null),
   _destroy: Joi.boolean().default(false)
@@ -61,22 +71,28 @@ const getDetails = async (id) => {
     //   _id: new ObjectId(id)
     // })
     const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate([
-      { $match: {
-        _id: new ObjectId(id),
-        _destroy: false
-      } },
-      { $lookup: {
-        from: columnModel.COLUMN_COLLECTION_NAME,
-        localField: '_id',
-        foreignField: 'boardId',
-        as: 'columns'
-      } },
-      { $lookup: {
-        from: cardModel.CARD_COLLECTION_NAME,
-        localField: '_id',
-        foreignField: 'boardId',
-        as: 'cards'
-      } }
+      {
+        $match: {
+          _id: new ObjectId(id),
+          _destroy: false
+        }
+      },
+      {
+        $lookup: {
+          from: columnModel.COLUMN_COLLECTION_NAME,
+          localField: '_id',
+          foreignField: 'boardId',
+          as: 'columns'
+        }
+      },
+      {
+        $lookup: {
+          from: cardModel.CARD_COLLECTION_NAME,
+          localField: '_id',
+          foreignField: 'boardId',
+          as: 'cards'
+        }
+      }
     ]).toArray()
     return result[0] || null
   } catch (error) { throw new Error(error) }
@@ -130,6 +146,49 @@ const update = async (boardId, updateData) => {
   } catch (error) { throw new Error(error) }
 }
 
+const getBoards = async (userId, page, itemsPerPage) => {
+  try {
+    const query = [
+      { _destroy: false },
+      {
+        $or: [
+          { ownerIds: { $all: [new ObjectId(userId)] } },
+          { memberIds: { $all: [new ObjectId(userId)] } }
+        ]
+      }
+    ]
+
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).aggregate(
+      [
+        { $match: { $and: query } },
+        // sort title cua Board theo A-Z
+        { $sort: { title: 1 } },
+        // $facet de xy ly nhieu luong trong 1 query
+        {
+          $facet: {
+            // Thread 1: query boards
+            'queryBoards': [
+              { $skip: (page - 1) * itemsPerPage }, // Bo qua so luong ban ghi cua nhung trang truoc do
+              { $limit: itemsPerPage }
+            ],
+            // Thread 2: query count all boards in DB and return in countedAllBoards variable
+            'queryTotalBoards': [
+              { $count: 'countedAllBoards' }
+            ]
+          }
+        }
+      ],
+      //collation lam cho thu tu query title sort theo A-Z khong bi anh huong boi tieng Viet
+      { collation: { locale: 'en' } }
+    ).toArray()
+    const res = result[0]
+    return {
+      boards: res.queryBoards || [],
+      totalBoards: res.queryTotalBoards[0]?.countedAllBoards || 0
+    }
+  } catch (error) { throw new Error(error) }
+}
+
 export const boardModel = {
   BOARD_COLLECTION_NAME,
   BOARD_COLLECTION_SCHEMA,
@@ -138,5 +197,6 @@ export const boardModel = {
   getDetails,
   pushColumnOrderIds,
   update,
-  pullColumnOrderIds
+  pullColumnOrderIds,
+  getBoards
 }
