@@ -24,6 +24,16 @@ const createNew = async (reqBody) => {
   } catch (error) { throw error }
 }
 
+const update = async (cardId, updateData) => {
+  try {
+    // Cập nhật dữ liệu
+    await cardModel.update(cardId, updateData)
+    // Trả về dữ liệu cho Controller
+    return await cardModel.findOneById(cardId)
+  } catch (error) { throw error }
+}
+
 export const cardService = {
-  createNew
+  createNew,
+  update
 }
